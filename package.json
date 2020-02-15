@@ -8,5 +8,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Altair Wei",
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "dependencies": {
+    "bytenode": "^1.1.6"
+  }
 }
