@@ -83,28 +83,32 @@ const readDataHeader = function(bytecodeBuffer) {
 }
 
 /**
- * Fix bytecode with given data header field.
+ * Fix bytecode with current v8 data header field.
  * @param {*} bytecodeBuffer 
- * @param {*} field Which field needed to be fixed
  */
-const fixBytecode = function (bytecodeBuffer, field) {
+const fixBytecode = function (bytecodeBuffer) {
 
     if (!Buffer.isBuffer(bytecodeBuffer)) {
         throw new Error(`bytecodeBuffer must be a buffer object.`);
     }
-  
+
     let dummyBytecode = compileCode('"Hello World"');
 
-    //TODO: Replace with current nodejs version
+    // Replace with current v8 version hash
+    // [1] version hash
+    dummyBytecode.slice(4, 8).copy(bytecodeBuffer, 4);
   
     // Replace with current cpu features and flag hash
     if (process.version.startsWith('v8.8') || process.version.startsWith('v8.9')) {
         dummyBytecode.slice(16, 20).copy(bytecodeBuffer, 16);
         dummyBytecode.slice(20, 24).copy(bytecodeBuffer, 20);
     } else if (process.version.startsWith('v12') || process.version.startsWith('v13')) {
-        // Only have cpu features?
+        // cpu features entry has been removed
+        // [3] flag hash
         dummyBytecode.slice(12, 16).copy(bytecodeBuffer, 12);
     } else {
+        // [3] cpu features
+        // [4] flag hash
         dummyBytecode.slice(12, 16).copy(bytecodeBuffer, 12);
         dummyBytecode.slice(16, 20).copy(bytecodeBuffer, 16);
     }
@@ -137,7 +141,8 @@ global.bytenode = {
     readBytecodeFile,
     runBytecode,
     runBytecodeFile,
-    readDataHeader
+    readDataHeader,
+    fixBytecode
 };
   
 module.exports = global.bytenode;
