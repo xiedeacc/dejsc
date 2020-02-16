@@ -41,16 +41,18 @@ const runBytecode = function (bytecodeBuffer, fakeScript = "") {
  * @param   {string} filename
  * @returns {any}    The result of the very last statement executed in the script.
  */
-const runBytecodeFile = function (filename) {
+const runBytecodeFile = function (filename) {  
+    let bytecodeBuffer = readBytecodeFile(filename);
+    return runBytecode(bytecodeBuffer, "");
+};
 
+const readBytecodeFile = function (filename) {
     if (typeof filename !== 'string') {
         throw new Error(`filename must be a string. ${typeof filename} was given.`);
     }
   
-    let bytecodeBuffer = fs.readFileSync(filename);
-  
-    return runBytecode(bytecodeBuffer, "");
-};
+    return fs.readFileSync(filename);
+}
 
 const readSourceHash = function (bytecodeBuffer) {
 
@@ -66,19 +68,41 @@ const readSourceHash = function (bytecodeBuffer) {
     }
 };
 
-const fixBytecode = function (bytecodeBuffer) {
+const readDataHeader = function(bytecodeBuffer) {
+    if (!Buffer.isBuffer(bytecodeBuffer)) {
+        throw new Error(`bytecodeBuffer must be a buffer object.`);
+    }
+
+    return {
+        "magic_number"  : bytecodeBuffer.slice(0, 4),
+        "version_hash"  : bytecodeBuffer.slice(4, 8),
+        "source_hash"   : bytecodeBuffer.slice(8, 12),
+        "cpu_features"  : bytecodeBuffer.slice(12, 16),
+        "flag_hash"     : bytecodeBuffer.slice(16, 20)
+    }
+}
+
+/**
+ * Fix bytecode with given data header field.
+ * @param {*} bytecodeBuffer 
+ * @param {*} field Which field needed to be fixed
+ */
+const fixBytecode = function (bytecodeBuffer, field) {
 
     if (!Buffer.isBuffer(bytecodeBuffer)) {
         throw new Error(`bytecodeBuffer must be a buffer object.`);
     }
   
-    let dummyBytecode = compileCode('"ಠ_ಠ"');
+    let dummyBytecode = compileCode('"Hello World"');
+
+    //TODO: Replace with current nodejs version
   
+    // Replace with current cpu features and flag hash
     if (process.version.startsWith('v8.8') || process.version.startsWith('v8.9')) {
-        // Node is v8.8.x or v8.9.x
         dummyBytecode.slice(16, 20).copy(bytecodeBuffer, 16);
         dummyBytecode.slice(20, 24).copy(bytecodeBuffer, 20);
     } else if (process.version.startsWith('v12') || process.version.startsWith('v13')) {
+        // Only have cpu features?
         dummyBytecode.slice(12, 16).copy(bytecodeBuffer, 12);
     } else {
         dummyBytecode.slice(12, 16).copy(bytecodeBuffer, 12);
@@ -110,7 +134,10 @@ const compileCode = function (javascriptCode) {
 };
 
 global.bytenode = {
-    runBytecode, runBytecodeFile
+    readBytecodeFile,
+    runBytecode,
+    runBytecodeFile,
+    readDataHeader
 };
   
 module.exports = global.bytenode;
