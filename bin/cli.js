@@ -28,11 +28,11 @@ program
         // Read buffer
         let bytecodeBuffer = dejsc.readBytecodeFile(filename);
         if (cmdRun.fix) {
-            dejsc.fixBytecode(bytecodeBuffer)
+            dejsc.fixBytecode(bytecodeBuffer);
         }
 
         // Run bytecode
-        let result = dejsc.runBytecode(bytecodeBuffer)
+        let result = dejsc.runBytecode(bytecodeBuffer);
         if (cmdRun.export || cmdRun.exportJson) {
             let fakeModule = {};
             fakeModule.exports = {};
@@ -52,7 +52,7 @@ program
     .description("compile javascript source code into bytecodes.")
     .action(function(src, dest, cmdCompile) {
         // Check file
-        filename = path.resolve(file);
+        filename = path.resolve(src);
         if (!(fs.existsSync(filename) && fs.statSync(filename).isFile())) {
             console.error(`Error: Cannot find file '${filename}'.`);
         }
@@ -60,7 +60,8 @@ program
         // Compile javascript source code
         let javascriptCode = fs.readFileSync(filename, 'utf-8');
         let bytecodeBuffer = bytenode.compileCode(javascriptCode);
-        if (cmdCompile.dest) {
+
+        if (dest) {
             fs.writeFileSync(dest, bytecodeBuffer);
         } else {
             process.stdout.write(bytecodeBuffer);
